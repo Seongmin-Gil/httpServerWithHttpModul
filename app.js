@@ -1,4 +1,5 @@
 const http = require('http');
+const URL = require('url');
 
 const users = [
     {
@@ -50,10 +51,11 @@ const server = http.createServer();
 
 function httpRequestListener(req, res) {
     const { url, method } = req;
+    const reqUrl = URL.parse(url, true);
     //게시글 목록 조회
-    if(method === 'GET') {
-        if(url === '/posts') {
-            res.writeHead(200, {"cotent-Type" : "application/json"});
+    if (method === 'GET') {
+        if (url === '/posts') {
+            res.writeHead(200, { "cotent-Type": "application/json" });
             res.end(JSON.stringify(posts));
         }
     }
@@ -74,16 +76,16 @@ function httpRequestListener(req, res) {
                     password: newUser.password,
                 });
                 res.writeHead(200, { 'context-Type': 'application/json' });
-                res.end(JSON.stringify({ "message":"userCreated" }));
+                res.end(JSON.stringify({ "message": "userCreated" }));
             });
         }
         //게시글 등록 endPoint
-        if(url === '/posting') {
+        if (url === '/posting') {
             let postingData = '';
-            req.on('data', (data)=>{
+            req.on('data', (data) => {
                 postingData += data;
             });
-            req.on('end', ()=> {
+            req.on('end', () => {
                 const newPosting = JSON.parse(postingData);
                 posts.push({
                     userID: newPosting.userID,
@@ -92,8 +94,28 @@ function httpRequestListener(req, res) {
                     postingTitle: newPosting.postingTitle,
                     postingContent: newPosting.postingContent,
                 });
-                res.writeHead(200, {'text-Type':'application/json'});
-                res.end(JSON.stringify({"message" : "postCreated"}));
+                res.writeHead(200, { 'text-Type': 'application/json' });
+                res.end(JSON.stringify({ "message": "postCreated" }));
+            });
+        }
+    }
+
+    if (method === 'PATCH') {
+        const searchId = reqUrl.pathname.slice(reqUrl.pathname.indexOf('/', 1) + 1);
+        const pathUrl = reqUrl.pathname.slice(0, reqUrl.pathname.indexOf('/', 1));
+        if (pathUrl === '/posts' && searchId) {
+            let updateData = '';
+            req.on('data', (data) => {
+                updateData += data
+            });
+            req.on('end', () => {
+                const inputValue = JSON.parse(updateData);
+                const originValue = posts.filter((post) => post.userID === Number(searchId));
+                for (const key in inputValue) {
+                    originValue[0][key] = inputValue[key];
+                }
+                res.writeHead(200, { "cotent-Type": "application/json" });
+                res.end(JSON.stringify(posts));
             });
         }
     }
