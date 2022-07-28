@@ -54,11 +54,33 @@ function httpRequestListener(req, res) {
     const reqUrl = URL.parse(url, true);
     const searchId = reqUrl.pathname.slice(reqUrl.pathname.indexOf('/', 1) + 1); //입력받은 id
     const pathUrl = reqUrl.pathname.slice(0, reqUrl.pathname.indexOf('/', 1)); //입력한 url path
-    //게시글 목록 조회
+
     if (method === 'GET') {
+        //게시글 조회
         if (url === '/posts') {
             res.writeHead(200, { "cotent-Type": "application/json" });
             res.end(JSON.stringify(posts));
+        }
+        //유저가 작성한 게시글 조회
+        if(searchId && pathUrl === '/users') {
+            const userInfo = users.filter(user => user.id === Number(searchId))[0];//해당 유저 정보
+            const userPostings = posts.filter(post => post.userID === Number(searchId));//유저가 작성한 게시글
+            const postResult = [];
+            
+            for (const index in userPostings ) {
+                postResult.push({
+                    postingId : userPostings[index]['postingId'],
+                    postingName : userPostings[index]['postingTitle'],
+                    postingContent : userPostings[index]['postingContent'],
+                });
+            }
+            const result = {
+                userID : userInfo['id'],
+                userName : userInfo['name'],
+                postings : postResult,
+            };
+            res.writeHead(200, {"content-Type":"application/json"});
+            res.end(JSON.stringify({"data" : result}));
         }
     }
 
