@@ -52,6 +52,8 @@ const server = http.createServer();
 function httpRequestListener(req, res) {
     const { url, method } = req;
     const reqUrl = URL.parse(url, true);
+    const searchId = reqUrl.pathname.slice(reqUrl.pathname.indexOf('/', 1) + 1); //입력받은 id
+    const pathUrl = reqUrl.pathname.slice(0, reqUrl.pathname.indexOf('/', 1)); //입력한 url path
     //게시글 목록 조회
     if (method === 'GET') {
         if (url === '/posts') {
@@ -101,22 +103,32 @@ function httpRequestListener(req, res) {
     }
 
     if (method === 'PATCH') {
-        const searchId = reqUrl.pathname.slice(reqUrl.pathname.indexOf('/', 1) + 1);
-        const pathUrl = reqUrl.pathname.slice(0, reqUrl.pathname.indexOf('/', 1));
+        //게시글 수정 end-point
         if (pathUrl === '/posts' && searchId) {
             let updateData = '';
             req.on('data', (data) => {
                 updateData += data
             });
             req.on('end', () => {
-                const inputValue = JSON.parse(updateData);
-                const originValue = posts.filter((post) => post.userID === Number(searchId));
-                for (const key in inputValue) {
+                const inputValue = JSON.parse(updateData);// 수정 요청한 정보 받아오기
+                const originValue = posts.filter(post => post.postingId === Number(searchId)); // 수정할 게시물 찾아오기
+                for (const key in inputValue) { // 해당 게시물 데이터 수정 작업 수행
                     originValue[0][key] = inputValue[key];
                 }
                 res.writeHead(200, { "cotent-Type": "application/json" });
-                res.end(JSON.stringify(posts));
+                res.end(JSON.stringify({"data" : originValue[0]}));
             });
+        }
+    }
+
+    if (method === 'DELETE') {
+        //게시물 삭제 end-point
+        if (pathUrl === '/posts' && searchId) {
+            const targetObj = posts.filter(post=>post.postingId === Number(searchId));//삭제할 게시물 찾기
+            const targetObjIndex = posts.indexOf(targetObj[0]);//삭제할 게시물의 index 찾기
+            posts.splice(targetObjIndex,1); //게시물 삭제 수행
+            res.writeHead(200, { "cotent-Type": "application/json" });
+            res.end(JSON.stringify({"message" : "postingDeleted"}));
         }
     }
 }
