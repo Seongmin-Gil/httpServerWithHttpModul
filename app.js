@@ -50,6 +50,14 @@ const server = http.createServer();
 
 function httpRequestListener(req, res) {
     const { url, method } = req;
+    //게시글 목록 조회
+    if(method === 'GET') {
+        if(url === '/posts') {
+            res.writeHead(200, {"cotent-Type" : "application/json"});
+            res.end(JSON.stringify(posts));
+        }
+    }
+
     if (method === 'POST') {
         //회원가입 endPoint
         if (url === '/signUp') {
