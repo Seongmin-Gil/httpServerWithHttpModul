@@ -51,6 +51,7 @@ const server = http.createServer();
 function httpRequestListener(req, res) {
     const { url, method } = req;
     if (method === 'POST') {
+        //회원가입 endPoint
         if (url === '/signUp') {
             let data = '';
             req.on('data', (body) => {
@@ -66,6 +67,25 @@ function httpRequestListener(req, res) {
                 });
                 res.writeHead(200, { 'context-Type': 'application/json' });
                 res.end(JSON.stringify({ "message":"userCreated" }));
+            });
+        }
+        //게시글 등록 endPoint
+        if(url === '/posting') {
+            let postingData = '';
+            req.on('data', (data)=>{
+                postingData += data;
+            });
+            req.on('end', ()=> {
+                const newPosting = JSON.parse(postingData);
+                posts.push({
+                    userID: newPosting.userID,
+                    userName: newPosting.userName,
+                    postingId: newPosting.postingId,
+                    postingTitle: newPosting.postingTitle,
+                    postingContent: newPosting.postingContent,
+                });
+                res.writeHead(200, {'text-Type':'application/json'});
+                res.end(JSON.stringify({"message" : "postCreated"}));
             });
         }
     }
